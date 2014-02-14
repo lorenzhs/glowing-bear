@@ -227,11 +227,13 @@ weechat.factory('handlers', ['$rootScope', 'models', 'plugins', function($rootSc
 weechat.factory('connection',
                 ['$rootScope',
                  '$log',
+                 '$location',
                  'handlers',
                  'models',
                  'ngWebsockets',
 function($rootScope,
          $log,
+         $location,
          handlers,
          models,
          ngWebsockets) {
@@ -330,6 +332,7 @@ function($rootScope,
                     _requestSync();
                     $log.info("Connected to relay");
                     $rootScope.connected = true;
+                    $location.path('/connected');
                 },
                 function() {
                     // Connection got closed, lets check if we ever was connected successfully
@@ -999,7 +1002,10 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
 weechat.config(['$routeProvider',
     function($routeProvider) {
         $routeProvider.when('/', {
-            templateUrl: 'index.html',
+            templateUrl: 'templates/index.html',
+            controller: 'indexCtrl'
+        }).otherwise({
+            templateUrl: 'templates/glowingbear.html',
             controller: 'WeechatCtrl'
         });
     }
