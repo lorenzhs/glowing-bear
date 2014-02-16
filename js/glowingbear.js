@@ -621,22 +621,22 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
         }
     };
 
-    $rootScope.$on('activeBufferChanged', function() {
+    $rootScope.$on('activeBufferChanged', function(signal,
+                                                   activeBuffer) {
         $rootScope.scrollWithBuffer(true);
 
-        var ab = models.getActiveBuffer();
-        if (ab.requestedLines < $scope.lines) {
+        if (activeBuffer.requestedLines < $scope.lines) {
             // buffer has not been loaded, but some lines may already be present if they arrived after we connected
             $scope.fetchMoreLines($scope.lines);
         }
-        $rootScope.updateTitle(ab);
+        $rootScope.updateTitle(activeBuffer);
 
         // If user wants to sync hotlist with weechat
         // we will send a /buffer bufferName command every time
         // the user switches a buffer. This will ensure that notifications
         // are cleared in the buffer the user switches to
-        if ($scope.hotlistsync && ab.fullName) {
-            connection.sendCoreCommand('/buffer ' + ab.fullName);
+        if ($scope.hotlistsync && activeBuffer.fullName) {
+            connection.sendCoreCommand('/buffer ' + activeBuffer.fullName);
         }
 
         // Clear search term on buffer change
