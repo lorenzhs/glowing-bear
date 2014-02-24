@@ -1,3 +1,5 @@
+/*jslint browser: true, forin: true, nomen: true, plusplus: true, regexp: true, vars: true, sloppy: true, maxerr: 999 */
+
 /**
  * Portable utilities for IRC.
  */
@@ -53,15 +55,15 @@ var IrcUtils = {
      * @return Next nick (may be the same)
      */
     _nextNick: function(iterCandidate, currentNick, nickList) {
-        var firstInGroup = null;
         var matchingNicks = [];
         var at = null;
         var lcIterCandidate = iterCandidate.toLowerCase();
         var lcCurrentNick = currentNick.toLowerCase();
 
         // collect matching nicks
-        for (var i = 0; i < nickList.length; ++i) {
-            var lcNick = nickList[i].toLowerCase();
+        var i, lcNick;
+        for (i = 0; i < nickList.length; ++i) {
+            lcNick = nickList[i].toLowerCase();
             if (lcNick.search(lcIterCandidate) === 0) {
                 matchingNicks.push(nickList[i]);
                 if (lcCurrentNick === lcNick) {
