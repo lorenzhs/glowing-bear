@@ -1,14 +1,17 @@
+/*jslint browser: true, forin: true, nomen: true, plusplus: true, regexp: true, vars: true, sloppy: true, maxerr: 999 */
+/*global angular: true, _: true, $: true, weeChat: true, Notification: true, Favico: true, alert: true, IrcUtils: true */
+
 var weechat = angular.module('weechat', ['ngRoute', 'localStorage', 'weechatModels', 'plugins', 'ngSanitize', 'ngWebsockets', 'pasvaz.bindonce', 'ngTouch', 'ngAnimate']);
 
-weechat.filter('toArray', function () {
+weechat.filter('toArray', function() {
     'use strict';
 
-    return function (obj) {
+    return function(obj) {
         if (!(obj instanceof Object)) {
             return obj;
         }
 
-        return Object.keys(obj).map(function (key) {
+        return Object.keys(obj).map(function(key) {
             return Object.defineProperty(obj[key], '$key', { value: key });
         });
     };
@@ -223,28 +226,17 @@ weechat.factory('handlers', ['$rootScope', 'models', 'plugins', function($rootSc
 
 }]);
 
-weechat.factory('connection',
-                ['$rootScope',
-                 '$log',
-                 'handlers',
-                 'models',
-                 'ngWebsockets',
-function($rootScope,
-         $log,
-         handlers,
-         models,
-         ngWebsockets) {
+weechat.factory('connection', ['$rootScope', '$log', 'handlers', 'models', 'ngWebsockets', function($rootScope, $log, handlers, models, ngWebsockets) {
 
-    protocol = new weeChat.Protocol();
+    $rootScope.protocol = new weeChat.Protocol();
 
     // Takes care of the connection and websocket hooks
 
-    var connect = function (host, port, passwd, ssl, noCompression) {
+    var connect = function(host, port, passwd, ssl, noCompression) {
         var proto = ssl ? 'wss' : 'ws';
         var url = proto + "://" + host + ":" + port + "/weechat";
 
-        var onopen = function () {
-
+        var onopen = function() {
 
             // Helper methods for initialization commands
             var _initializeConnection = function(passwd) {
@@ -306,10 +298,10 @@ function($rootScope,
                     // Connection is successful
                     // Send all the other commands required for initialization
                     _requestBufferInfos().then(function(bufinfo) {
-                        var bufferInfos = bufinfo.objects[0].content;
+                        var bufferInfos = bufinfo.objects[0].content, i, buffer;
                         // buffers objects
-                        for (var i = 0; i < bufferInfos.length ; i++) {
-                            var buffer = new models.Buffer(bufferInfos[i]);
+                        for (i = 0; i < bufferInfos.length; i++) {
+                            buffer = new models.Buffer(bufferInfos[i]);
                             models.addBuffer(buffer);
                             // Switch to first buffer on startup
                             if (i === 0) {
@@ -337,7 +329,6 @@ function($rootScope,
                     }
                 }
             );
-
         };
 
         var onmessage = function() {
@@ -348,45 +339,44 @@ function($rootScope,
         };
 
 
-        var onclose = function () {
+        var onclose = function() {
             /*
              * Handles websocket disconnection
              */
             $log.info("Disconnected from relay");
-            failCallbacks('disconnection');
+            $rootScope.failCallbacks('disconnection');
             $rootScope.connected = false;
             $rootScope.$emit('relayDisconnect');
             $rootScope.$apply();
         };
 
-        var onerror = function (evt) {
+        var onerror = function(evt) {
             /*
              * Handles cases when connection issues come from
              * the relay.
              */
-            $log.error("Relay error" + evt.data);
+            $log.error("Relay error " + evt.data);
 
             if (evt.type === "error" && this.readyState !== 1) {
-                failCallbacks('error');
+                $rootScope.failCallbacks('error');
                 $rootScope.errorMessage = true;
             }
         };
 
-        protocol.setId = function(id, message) {
+        $rootScope.protocol.setId = function(id, message) {
             return '(' + id + ') ' + message;
         };
 
 
         ngWebsockets.connect(url,
-                     protocol,
-                     {
-                         'binaryType': "arraybuffer",
-                         'onopen': onopen,
-                         'onclose': onclose,
-                         'onmessage': onmessage,
-                         'onerror': onerror,
-                     });
-
+            $rootScope.protocol,
+            {
+                'binaryType': "arraybuffer",
+                'onopen': onopen,
+                'onclose': onclose,
+                'onmessage': onmessage,
+                'onerror': onerror,
+            });
     };
 
     var disconnect = function() {
@@ -452,11 +442,11 @@ function($rootScope,
     };
 }]);
 
-weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout', '$log', 'models', 'connection', function ($rootScope, $scope, $store, $timeout, $log, models, connection) {
+weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout', '$log', 'models', 'connection', function($rootScope, $scope, $store, $timeout, $log, models, connection) {
     if (window.Notification) {
         // Request notification permission
-        Notification.requestPermission(function (status) {
-            $log.info('Notification permission status:',status);
+        Notification.requestPermission(function(status) {
+            $log.info('Notification permission status:', status);
             if (Notification.permission !== status) {
                 Notification.permission = status;
             }
@@ -465,18 +455,18 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
 
     $scope.mobile_cutoff = 968;
 
-    $rootScope.countWatchers = function () {
+    $rootScope.countWatchers = function() {
         var root = $(document.getElementsByTagName('body'));
         var watchers = [];
 
-        var f = function (element) {
+        var f = function(element) {
             if (element.data().hasOwnProperty('$scope')) {
-                angular.forEach(element.data().$scope.$$watchers, function (watcher) {
+                angular.forEach(element.data().$scope.$$watchers, function(watcher) {
                     watchers.push(watcher);
                 });
             }
 
-            angular.forEach(element.children(), function (childElement) {
+            angular.forEach(element.children(), function(childElement) {
                 f($(childElement));
             });
         };
@@ -518,7 +508,8 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
         // Do this the old-fashioned way with iterating over the keys, as underscore proved to be error-prone
         var keys = Object.keys(models.model.buffers);
         var count = 0;
-        for (var key in keys) {
+        var key;
+        for (key in keys) {
             count += models.model.buffers[keys[key]][type];
         }
 
@@ -542,8 +533,8 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
         var notifications = $rootScope.unreadCount('notification');
         if (notifications > 0) {
             $scope.favico.badge(notifications, {
-                    bgColor: '#d00',
-                    textColor: '#fff'
+                bgColor: '#d00',
+                textColor: '#fff'
             });
         } else {
             var unread = $rootScope.unreadCount('unread');
@@ -654,7 +645,7 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
 
     $scope.openNick = function() {
         if (document.body.clientWidth < $scope.mobile_cutoff) {
-            if($scope.nonicklist) {
+            if ($scope.nonicklist) {
                 $scope.nonicklist = false;
             }
         }
@@ -662,7 +653,7 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
 
     $scope.closeNick = function() {
         if (document.body.clientWidth < $scope.mobile_cutoff) {
-            if(!$scope.nonicklist) {
+            if (!$scope.nonicklist) {
                 $scope.nonicklist = true;
             }
         }
@@ -715,12 +706,12 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
 
 
     // Calculate number of lines to fetch
-    $scope.lines = function() {
+    $scope.lines = (function() {
         var lineHeight = document.querySelector(".bufferline").clientHeight;
         // I would have used document.querySelector("#bufferlines").clientHeight and added 5 to the total result, but that provides incorrect values on mobile
         var areaHeight = document.body.clientHeight;
-        return Math.ceil(areaHeight/lineHeight);
-    }();
+        return Math.ceil(areaHeight / lineHeight);
+    }());
 
     $rootScope.loadingLines = false;
     $scope.fetchMoreLines = function() {
@@ -770,7 +761,7 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
             var base_url = location.protocol + '//' + location.host +
                 location.pathname.replace(/\/(index\.html)?$/, '');
             var request = navigator.mozApps.install(base_url + '/manifest.webapp');
-            request.onsuccess = function () {
+            request.onsuccess = function() {
                 $scope.isinstalled = true;
                 // Save the App object that is returned
                 var appRecord = this.result;
@@ -778,7 +769,7 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
                 appRecord.launch();
                 alert('Installation successful!');
             };
-            request.onerror = function () {
+            request.onerror = function() {
                 // Display the error information from the DOMError object
                 alert('Install failed, error: ' + this.error.name);
             };
@@ -808,7 +799,7 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
         });
 
         // Cancel notification automatically
-        var timeout = 15*1000;
+        var timeout = 15 * 1000;
         notification.onshow = function() {
             setTimeout(function() {
                 notification.close();
@@ -887,13 +878,13 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
 
     $scope.handleSearchBoxKey = function($event) {
         // Support different browser quirks
-        var code = $event.keyCode ? $event.keyCode : $event.charCode;
-        // Handle escape
+        var code = $event.keyCode || $event.charCode;
         if (code === 27) {
+            // Handle escape
             $event.preventDefault();
             $scope.search = '';
-        } // Handle enter
-        else if (code === 13) {
+        } else if (code === 13) {
+            // Handle enter
             $event.preventDefault();
             if ($scope.filteredBuffers.length > 0) {
                 models.setActiveBuffer($scope.filteredBuffers[0].id);
@@ -912,17 +903,14 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
         $scope.favico.reset();
     };
 
-}]
-);
+}]);
 
-weechat.config(['$routeProvider',
-    function($routeProvider) {
-        $routeProvider.when('/', {
-            templateUrl: 'index.html',
-            controller: 'WeechatCtrl'
-        });
-    }
-]);
+weechat.config(['$routeProvider', function($routeProvider) {
+    $routeProvider.when('/', {
+        templateUrl: 'index.html',
+        controller: 'WeechatCtrl'
+    });
+}]);
 
 
 weechat.directive('plugin', function() {
@@ -1029,7 +1017,7 @@ weechat.directive('inputBar', function() {
                 }
 
                 // Support different browser quirks
-                var code = $event.keyCode ? $event.keyCode : $event.charCode;
+                var code = $event.keyCode || $event.charCode;
 
                 // any other key than Tab resets nick completion iteration
                 var tmpIterCandidate = $scope.iterCandidate;
