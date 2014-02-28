@@ -401,6 +401,7 @@ function($rootScope,
 
     var disconnect = function() {
         ngWebsockets.send(weeChat.Protocol.formatQuit());
+        $location.path('/');
     };
 
     /*
@@ -494,15 +495,12 @@ weechat.controller('indexCtrl', ['$rootScope', '$scope', '$store', 'connection',
         $store.bind($scope, "password", "");
     }
 
+    $rootScope.favico = new Favico({animation: 'none'});
+
 
     $scope.connect = function() {
         $scope.requestNotificationPermission();
         connection.connect($scope.host, $scope.port, $scope.password, $scope.ssl);
-    };
-
-
-    $scope.disconnect = function() {
-        connection.disconnect();
     };
 
 
@@ -511,7 +509,7 @@ weechat.controller('indexCtrl', ['$rootScope', '$scope', '$store', 'connection',
         // Firefox
         if (window.Notification) {
             Notification.requestPermission(function(status) {
-                $log.info('Notification permission status: ', status);
+                console.log('Notification permission status: ', status);
                 if (Notification.permission !== status) {
                     Notification.permission = status;
                 }
@@ -522,7 +520,7 @@ weechat.controller('indexCtrl', ['$rootScope', '$scope', '$store', 'connection',
         if (window.webkitNotifications !== undefined) {
             var havePermission = window.webkitNotifications.checkPermission();
             if (havePermission !== 0) { // 0 is PERMISSION_ALLOWED
-                $log.info('Notification permission status: ', havePermission === 0);
+                console.log('Notification permission status: ', havePermission === 0);
                 window.webkitNotifications.requestPermission();
             }
         }
@@ -610,16 +608,16 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
     $scope.updateFavico = function() {
         var notifications = $rootScope.unreadCount('notification');
         if (notifications > 0) {
-            $scope.favico.badge(notifications, {
+            $rootScope.favico.badge(notifications, {
                     bgColor: '#d00',
                     textColor: '#fff'
             });
         } else {
             var unread = $rootScope.unreadCount('unread');
             if (unread === 0) {
-                $scope.favico.reset();
+                $rootScope.favico.reset();
             } else {
-                $scope.favico.badge(unread, {
+                $rootScope.favico.badge(unread, {
                     bgColor: '#5CB85C',
                     textColor: '#ff0'
                 });
@@ -656,12 +654,10 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
         }
     });
 
-    $scope.favico = new Favico({animation: 'none'});
-
     $rootScope.$on('notificationChanged', function() {
         $rootScope.updateTitle();
 
-        if ($scope.useFavico && $scope.favico) {
+        if ($scope.useFavico && $rootScope.favico) {
             $scope.updateFavico();
         }
     });
@@ -760,7 +756,7 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
         if ($scope.useFavico) {
             $scope.updateFavico();
         } else {
-            $scope.favico.reset();
+            $rootScope.favico.reset();
         }
     });
 
@@ -785,6 +781,11 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
             }
             connection.sendMessage('/' + command + ' ' + bufferName);
         }
+    };
+
+
+    $scope.disconnect = function() {
+        connection.disconnect();
     };
 
 
@@ -999,7 +1000,7 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
             // Chrome requires us to set this or it will not show the dialog
             event.returnValue = "You have an active connection to your WeeChat relay. Please disconnect using the button in the top-right corner or by pressing the Escape key.";
         }
-        $scope.favico.reset();
+        $rootScope.favico.reset();
     };
 
 }]
