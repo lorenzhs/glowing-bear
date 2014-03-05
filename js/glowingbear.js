@@ -1006,8 +1006,8 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
 }]
 );
 
-weechat.config(['$routeProvider',
-    function($routeProvider) {
+weechat.config(['$routeProvider', '$locationProvider',
+    function($routeProvider, $locationProvider) {
         $routeProvider.when('/', {
             templateUrl: 'templates/index.html',
             controller: 'indexCtrl'
@@ -1015,6 +1015,7 @@ weechat.config(['$routeProvider',
             templateUrl: 'templates/glowingbear.html',
             controller: 'WeechatCtrl'
         });
+        $locationProvider.html5Mode(true);
     }
 ]);
 
