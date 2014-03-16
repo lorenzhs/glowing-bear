@@ -552,9 +552,6 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
                     $scope.showSidebar = false;
                     models.setActiveBuffer(buffer);
                 }
-
-                // Cancel notification
-                window.plugin.notification.local.cancel(id);
             };
         }
     };
@@ -1076,6 +1073,7 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
                 id: id,
                 message: body,
                 title: title,
+                autoCancel: true,
                 json: JSON.stringify({ buffer: buffer.id })  // remember buffer id for when the notification is clicked
             });
         }
