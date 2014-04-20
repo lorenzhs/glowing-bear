@@ -219,9 +219,9 @@ $ openssl req -nodes -newkey rsa:4096 -keyout relay.pem -x509 -days 365 -out rel
           </li>
         </ul>
       </div>
-      <div bindonce id="bufferlines" class="monospace" ng-swipe-right="swipeSidebar()" ng-swipe-left="openNick()" ng-class="{'withnicklist': showNicklist, 'withsidebar': showSidebar}">
+      <div bindonce id="bufferlines" class="monospace" ng-swipe-right="swipeSidebar()" ng-swipe-left="openNick()" ng-class="{'withnicklist': showNicklist, 'withsidebar': showSidebar}" virtual-scroll input-model="bufferlines" output-model="renderedlines" scroll-callback="fetchMoreLines()" block-size="lines">
         <div id="nicklist" ng-show="showNicklist" ng-swipe-right="closeNick()" class="vertical-line-left">
-          <ul class="nicklistgroup list-unstyled" ng-repeat="group in activeBuffer().nicklist">
+          <ul class="nicklistgroup list-unstyled" ng-repeat="group in nicklist">
             <li ng-repeat="nick in group.nicks|orderBy:'name'" ng-click="openBuffer(nick.name)">
               <a ng-click="nickAction(nick)"><span bo-class="nick.prefixClasses" bo-text="nick.prefix"></span><span bo-class="nick.nameClasses" bo-text="nick.name"></span></a>
             </li>
@@ -236,10 +236,10 @@ $ openssl req -nodes -newkey rsa:4096 -keyout relay.pem -x509 -days 365 -out rel
               </td>
             </tr>
           </tbody>
-          <tbody ng-repeat="bufferline in (bufferlines = activeBuffer().lines)">
+          <tbody ng-repeat="bufferline in renderedlines">
             <tr class="bufferline">
               <td class="time">
-                <span class="date" bo-class="{'repeated-time': bufferline.shortTime==bufferlines[$index-1].shortTime}">
+                <span class="date" bo-class="{'repeated-time': bufferline.shortTime==renderedlines[$index-1].shortTime}">
                   <span class="cof-chat_time cob-chat_time coa-chat_time" bo-text="bufferline.date|date:'HH'"></span><span class="cof-chat_time_delimiters cob-chat_time_delimiters coa-chat_time_delimiters">:</span><span class="cof-chat_time cob-chat_time coa-chat_time" bo-text="bufferline.date|date:'mm'"></span>
                 </span>
               </td>

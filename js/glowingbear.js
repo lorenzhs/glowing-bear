@@ -1139,6 +1139,86 @@ weechat.config(['$routeProvider',
     }
 ]);
 
+weechat.directive('virtualScroll', ['connection', function(connection) {
+    return {
+        scope: {
+            inputModel: '=',
+            outputModel: '=',
+            blockSize: '=',
+            scrollCallback: '&',
+        },
+
+        controller: function($scope, $element, $attrs, $location) {
+            var lastScrollTop = 0;
+            var posTop = 0;
+            var posBot = -1;
+
+            var onScroll = function(event) {
+                console.log("scroll!");
+                var elem = event.target;
+                var isUp = (elem.scrollTop  < lastScrollTop);  // scrolling up?
+                var distToEnd = elem.scrollTop;
+                if (!isUp) {
+                    // scrolling down -- calculate distance to bottom end
+                    distToEnd = elem.scrollHeight - (elem.scrollTop + elem.clientHeight);
+                }
+
+                // Check if we're getting close to the end of the list
+                if (distToEnd < 100) {
+                    console.log('scrolling and getting close to the edge. posTop:', posTop, 'posBot:', posBot);
+                    // Add more elements to display list
+                    var i, element;
+                    if (isUp) {
+                        console.log('it\'s going upwards');
+                        for (i = 0; i < $scope.blockSize && posTop < $scope.inputModel.length; i++) {
+                            element = $scope.inputModel[posTop++];
+                            $scope.outputModel.unshift(element);
+                            console.log("adding", element);
+                        }
+                        if (i < $scope.blockSize) {
+                            console.log('didn\'t get enough lines from buffer, fetching more...');
+                            connection.fetchMoreLines();
+                        }
+                        console.log($scope.outputModel.length, i);
+                        console.log("removing elements with nos", $scope.outputModel.length-i+1, "to", $scope.outputModel.length);
+                        // remove same number of elements from back
+                        //$scope.outputModel = $scope.outputModel;//.splice(0, $scope.outputModel.length - i);
+
+                    } else {
+                        console.log('going down');
+                        // scrolling down, elements are already there
+                        for (i = 0; i < $scope.blockSize && posBot >= 0; i++) {
+                            element = $scope.inputModel[posBot--];
+                            $scope.outputModel.push(element);
+                            console.log("adding", element);
+                        }
+                        // remove same number of elements from the front
+                        //$scope.outputModel = $scope.outputModel.splice(i, $scope.outputModel.length);
+                    }
+                }
+
+                lastScrollTop = elem.scrollTop;
+            };
+
+            $scope.$watchCollection("inputModel", function(newValue, oldValue, $scope) {
+                console.log("list changed!");
+                if (newValue.length === undefined) {
+                    console.log("undefined abort");
+                    return;
+                }
+                console.log(oldValue, newValue);
+                $scope.outputModel = [];
+                var start = Math.max(0, newValue.length - $scope.blockSize);
+                for (var i = start; i < newValue.length; i++) {
+                    $scope.outputModel.push(newValue[i]);
+                    posTop++;
+                }
+            });
+
+            angular.element($element[0]).bind("scroll", onScroll);
+        }
+    };
+}]);
 
 weechat.directive('plugin', function() {
     /*
