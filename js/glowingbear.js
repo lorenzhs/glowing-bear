@@ -421,13 +421,16 @@ function($rootScope,
         var buffer = models.getActiveBuffer();
         if (numLines === undefined) {
             // Math.max(undefined, *) = NaN -> need a number here
+            console.log("numLines is undefined");
             numLines = 0;
         }
         // Calculate number of lines to fetch, at least as many as the parameter
+        console.log("reqLines:", buffer.requestedLines, "numLines:", numLines);
         numLines = Math.max(numLines, buffer.requestedLines * 2);
 
         // Indicator that we are loading lines, hides "load more lines" link
         $rootScope.loadingLines = true;
+        console.log("fetchMoreLines fetching", numLines, "lines");
         // Send hdata request to fetch lines for this particular buffer
         ngWebsockets.send(
             weeChat.Protocol.formatHdata({
@@ -438,13 +441,17 @@ function($rootScope,
         ).then(function(lineinfo) {
             // delete old lines and add new ones
             var oldLength = buffer.lines.length;
+            // Count number of lines recieved
+            var linesReceivedCount = lineinfo.objects[0].content.length;
+            if (oldLength > linesReceivedCount) {
+                console.log("waah", oldLength, linesReceivedCount);
+                return;
+            }
             // Whether to set the readmarker to the middle position
             // Don't do that if we didn't get any more lines than we already had
             var setReadmarker = (buffer.lastSeen >= 0) && (oldLength !== buffer.lines.length);
             buffer.lines.length = 0;
             buffer.requestedLines = 0;
-            // Count number of lines recieved
-            var linesReceivedCount = lineinfo.objects[0].content.length;
 
             // Parse the lines
             handlers.handleLineInfo(lineinfo, true);
@@ -1139,7 +1146,7 @@ weechat.config(['$routeProvider',
     }
 ]);
 
-weechat.directive('virtualScroll', ['connection', function(connection) {
+weechat.directive('virtualScroll', ['connection', '$rootScope', function(connection, $rootScope) {
     return {
         scope: {
             inputModel: '=',
@@ -1152,6 +1159,7 @@ weechat.directive('virtualScroll', ['connection', function(connection) {
             var lastScrollTop = 0;
             var posTop = 0;
             var posBot = -1;
+            var lastLength = 0;
 
             var onScroll = function(event) {
                 console.log("scroll!");
@@ -1175,7 +1183,7 @@ weechat.directive('virtualScroll', ['connection', function(connection) {
                             $scope.outputModel.unshift(element);
                             console.log("adding", element);
                         }
-                        if (i < $scope.blockSize) {
+                        if (i < $scope.blockSize && !$rootScope.loadingLines) {
                             console.log('didn\'t get enough lines from buffer, fetching more...');
                             connection.fetchMoreLines();
                         }
@@ -1200,19 +1208,25 @@ weechat.directive('virtualScroll', ['connection', function(connection) {
                 lastScrollTop = elem.scrollTop;
             };
 
-            $scope.$watchCollection("inputModel", function(newValue, oldValue, $scope) {
-                console.log("list changed!");
-                if (newValue.length === undefined) {
+            $scope.$watchCollection("inputModel", function(newValue, oldValue) {
+                if (newValue === undefined || newValue.length === undefined) {
                     console.log("undefined abort");
                     return;
                 }
-                console.log(oldValue, newValue);
+                console.log("list changed! new length:", newValue.length, "old length:", oldValue.length, '/', lastLength);
+                // TODO rewrite this, it's broken
+                // Currently, we don't know *where* the input model changed
+                // were new items added at the beginning (more lines fetched)
+                // or at the end (someone said something)?
+                // We probably need to change the way lines are added
+
                 $scope.outputModel = [];
                 var start = Math.max(0, newValue.length - $scope.blockSize);
                 for (var i = start; i < newValue.length; i++) {
                     $scope.outputModel.push(newValue[i]);
                     posTop++;
                 }
+                lastLength = newValue.length;
             });
 
             angular.element($element[0]).bind("scroll", onScroll);
