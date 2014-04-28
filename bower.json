@@ -21,7 +21,7 @@
     "angular-sanitize": "~1.2.0",
     "angular-touch": "~1.2.0",
     "angular-animate": "~1.2.0",
-    "underscore": "~1.5.2",
+    "underscore": "~1.6",
     "jquery": "~1.11",
     "bootstrap": "~3.1"
   }
