@@ -412,6 +412,7 @@ function($rootScope,
     };
 
     var disconnect = function() {
+        $log.debug('Disconnecting from relay');
         ngWebsockets.send(weeChat.Protocol.formatQuit());
     };
 
@@ -451,8 +452,9 @@ function($rootScope,
 
 
     var fetchMoreLines = function(numLines) {
-        $log.debug('Fetching ', numLines, ' lines');
         var buffer = models.getActiveBuffer();
+        $log.debug('Fetching', numLines, 'lines in buffer', buffer.fullName);
+
         if (numLines === undefined) {
             // Math.max(undefined, *) = NaN -> need a number here
             numLines = 0;
@@ -531,7 +533,7 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
                 q.push(scope.$$nextSibling);
             }
         }
-        $log.debug(watchers);
+        $log.debug(watchers, 'watchers');
     };
 
 
@@ -548,7 +550,7 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
         // Firefox
         if (window.Notification) {
             Notification.requestPermission(function(status) {
-                $log.info('Notification permission status: ', status);
+                $log.info('Notification permission status:', status);
                 if (Notification.permission !== status) {
                     Notification.permission = status;
                 }
@@ -558,8 +560,8 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
         // Webkit
         if (window.webkitNotifications !== undefined) {
             var havePermission = window.webkitNotifications.checkPermission();
+            $log.info('Notification permission status:', havePermission === 0);
             if (havePermission !== 0) { // 0 is PERMISSION_ALLOWED
-                $log.info('Notification permission status: ', havePermission === 0);
                 window.webkitNotifications.requestPermission();
             }
         }
@@ -750,6 +752,7 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
     });
 
     $rootScope.$on('relayDisconnect', function() {
+        $log.debug('received disconnect event');
         // this reinitialze just breaks the bufferlist upon reconnection.
         // Disabled it until it's fully investigated and fixed
         //models.reinitialize();
