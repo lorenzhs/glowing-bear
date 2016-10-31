@@ -35,6 +35,7 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
         'savepassword': false,
         'autoconnect': false,
         'nonicklist': utils.isMobileUi(),
+        'alwaysnicklist': false, // only significant on mobile
         'noembed': true,
         'onlyUnread': false,
         'hotlistsync': true,
@@ -177,7 +178,7 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
             // Check if we should show nicklist or not
             $scope.showNicklist = $scope.updateShowNicklist();
         }
-        if ($scope.swipeStatus <= 0) {
+        if ($scope.swipeStatus <= 0 && !settings.alwaysnicklist) {
             $scope.swipeStatus = $scope.showNicklist ? -1 : 0;
         }
 
@@ -332,10 +333,10 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
         // Depending on swipe state
         if ($scope.swipeStatus === 1) {
             /* do nothing */
-        } else if ($scope.swipeStatus === 0 && touch) {
-            $scope.showSidebar();
+        } else if ($scope.swipeStatus === 0) {
+            if (touch) $scope.showSidebar();
         } else if ($scope.swipeStatus === -1) {
-            $scope.closeNick();
+            if (!settings.alwaysnicklist) $scope.closeNick();
         } else {
             console.log("Weird swipe status:", $scope.swipeStatus);
             $scope.swipeStatus = 0; // restore sanity
@@ -347,8 +348,8 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
     $rootScope.swipeLeft = function($event) {
         var touch = $event instanceof TouchEvent;
         // Depending on swipe state, ...
-        if ($scope.swipeStatus === 1 && touch) {
-            $scope.hideSidebar();
+        if ($scope.swipeStatus === 1) {
+            if (touch) $scope.hideSidebar();
         } else if ($scope.swipeStatus === 0) {
             $scope.openNick();
         } else if ($scope.swipeStatus === -1) {
@@ -744,7 +745,7 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
     // Watch model and update show setting when it changes
     settings.addCallback('nonicklist', function() {
         $scope.showNicklist = $scope.updateShowNicklist();
-        if ($scope.swipeStatus <= 0) {
+        if ($scope.swipeStatus <= 0 && !settings.alwaysnicklist) {
             $scope.swipeStatus = $scope.showNicklist ? -1 : 0;
         }
         // restore bottom view
@@ -764,7 +765,7 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
             return false;
         }
         // Check if option no nicklist is set
-        if (settings.nonicklist) {
+        if (settings.nonicklist && !settings.alwaysnicklist) {
             return false;
         }
         // Check if nicklist is empty
