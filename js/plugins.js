@@ -33,7 +33,7 @@ var urlRegexp = /(?:(?:https?|ftp):\/\/|www\.|ftp\.)\S*[^\s.;,(){}<>]/g;
 var UrlPlugin = function(name, urlCallback) {
     return {
         contentForMessage: function(message) {
-            var urls = message.match(urlRegexp);
+            var urls = _.uniq(message.match(urlRegexp));
             var content = [];
 
             for (var i = 0; urls && i < urls.length; i++) {
@@ -181,22 +181,25 @@ plugins.factory('userPlugins', function() {
      *
      */
 
-    var spotifyPlugin = new Plugin('Spotify track', function(message) {
+    var spotifyPlugin = new Plugin('Spotify music', function(message) {
         var content = [];
         var addMatch = function(match) {
             for (var i = 0; match && i < match.length; i++) {
-                var id = match[i].substr(match[i].length - 22, match[i].length);
                 var element = angular.element('<iframe></iframe>')
-                                     .attr('src', '//embed.spotify.com/?uri=spotify:track:' + id)
-                                     .attr('width', '300')
+                                     .attr('src', '//embed.spotify.com/?uri=' + match[i])
+                                     .attr('width', '350')
                                      .attr('height', '80')
                                      .attr('frameborder', '0')
                                      .attr('allowtransparency', 'true');
                 content.push(element.prop('outerHTML'));
             }
         };
-        addMatch(message.match(/spotify:track:([a-zA-Z-0-9]{22})/g));
-        addMatch(message.match(/open.spotify.com\/track\/([a-zA-Z-0-9]{22})/g));
+        addMatch(message.match(/spotify:track:[a-zA-Z-0-9]{22}/g));
+        addMatch(message.match(/spotify:artist:[a-zA-Z-0-9]{22}/g));
+        addMatch(message.match(/spotify:user:\w+:playlist:[a-zA-Z-0-9]{22}/g));
+        addMatch(message.match(/open\.spotify\.com\/track\/[a-zA-Z-0-9]{22}/g));
+        addMatch(message.match(/open\.spotify\.com\/artist\/[a-zA-Z-0-9]{22}/g));
+        addMatch(message.match(/open\.spotify\.com\/user\/\w+\/playlist\/[a-zA-Z-0-9]{22}/g));
         return content;
     });
 
@@ -206,7 +209,7 @@ plugins.factory('userPlugins', function() {
      * See: https://developers.google.com/youtube/player_parameters
      */
     var youtubePlugin = new UrlPlugin('YouTube video', function(url) {
-        var regex = /(?:youtube.com|youtu.be)\/(?:v\/|embed\/|watch(?:\?v=|\/))?([a-zA-Z0-9_-]+)/i,
+        var regex = /(?:youtube\.com|youtu\.be)\/(?:v\/|embed\/|watch(?:\?v=|\/))?([a-zA-Z0-9_-]+)/i,
             match = url.match(regex);
 
         if (match){
@@ -228,9 +231,9 @@ plugins.factory('userPlugins', function() {
      * See: http://www.dailymotion.com/doc/api/player.html
      */
     var dailymotionPlugin = new Plugin('Dailymotion video', function(message) {
-        var rPath = /dailymotion.com\/.*video\/([^_?# ]+)/;
-        var rAnchor = /dailymotion.com\/.*#video=([^_& ]+)/;
-        var rShorten = /dai.ly\/([^_?# ]+)/;
+        var rPath = /dailymotion\.com\/.*video\/([^_?# ]+)/;
+        var rAnchor = /dailymotion\.com\/.*#video=([^_& ]+)/;
+        var rShorten = /dai\.ly\/([^_?# ]+)/;
 
         var match = message.match(rPath) || message.match(rAnchor) || message.match(rShorten);
         if (match) {
@@ -251,8 +254,8 @@ plugins.factory('userPlugins', function() {
      * AlloCine Embedded Player
      */
     var allocinePlugin = new Plugin('AlloCine video', function(message) {
-        var rVideokast = /allocine.fr\/videokast\/video-(\d+)/;
-        var rCmedia = /allocine.fr\/.*cmedia=(\d+)/;
+        var rVideokast = /allocine\.fr\/videokast\/video-(\d+)/;
+        var rCmedia = /allocine\.fr\/.*cmedia=(\d+)/;
 
         var match = message.match(rVideokast) || message.match(rCmedia);
         if (match) {
@@ -359,7 +362,7 @@ plugins.factory('userPlugins', function() {
     var cloudmusicPlugin = new UrlPlugin('cloud music', function(url) {
         /* SoundCloud http://help.soundcloud.com/customer/portal/articles/247785-what-widgets-can-i-use-from-soundcloud- */
         var element;
-        if (url.match(/^https?:\/\/soundcloud.com\//)) {
+        if (url.match(/^https?:\/\/soundcloud\.com\//)) {
             element = angular.element('<iframe></iframe>')
                              .attr('width', '100%')
                              .attr('height', '120')
@@ -370,7 +373,7 @@ plugins.factory('userPlugins', function() {
         }
 
         /* MixCloud */
-        if (url.match(/^https?:\/\/([a-z]+\.)?mixcloud.com\//)) {
+        if (url.match(/^https?:\/\/([a-z]+\.)?mixcloud\.com\//)) {
             element = angular.element('<iframe></iframe>')
                              .attr('width', '480')
                              .attr('height', '60')
@@ -400,7 +403,7 @@ plugins.factory('userPlugins', function() {
       * Asciinema plugin
      */
     var asciinemaPlugin = new UrlPlugin('ascii cast', function(url) {
-        var regexp = /^https?:\/\/(?:www\.)?asciinema.org\/a\/([0-9a-z]+)/i,
+        var regexp = /^https?:\/\/(?:www\.)?asciinema\.org\/a\/([0-9a-z]+)/i,
             match = url.match(regexp);
         if (match) {
             var id = match[1];
@@ -436,7 +439,7 @@ plugins.factory('userPlugins', function() {
     // Embed GitHub gists
     var gistPlugin = new UrlPlugin('Gist', function(url) {
         // ignore trailing slashes and anchors
-        var regexp = /^(https:\/\/gist\.github.com\/(?:.*?))[\/]?(?:\#.*)?$/i;
+        var regexp = /^(https:\/\/gist\.github\.com\/(?:.*?))[\/]?(?:\#.*)?$/i;
         var match = url.match(regexp);
         if (match) {
             // get the URL from the match to trim away pseudo file endings and request parameters
@@ -457,7 +460,7 @@ plugins.factory('userPlugins', function() {
     });
 
     var pastebinPlugin = new UrlPlugin('Pastebin', function(url) {
-        var regexp = /^https?:\/\/pastebin.com\/([^.?]+)/i;
+        var regexp = /^https?:\/\/pastebin\.com\/([^.?]+)/i;
         var match = url.match(regexp);
         if (match) {
             var id = match[1],
@@ -475,7 +478,7 @@ plugins.factory('userPlugins', function() {
   * sample output: https://media.giphy.com/media/feqkVgjJpYtjy/giphy.gif
   */
     var giphyPlugin = new UrlPlugin('Giphy', function(url) {
-        var regex = /^https?:\/\/giphy.com\/gifs\/.*-(.*)\/?/i;
+        var regex = /^https?:\/\/giphy\.com\/gifs\/.*-(.*)\/?/i;
         // on match, id will contain the entire url in [0] and the giphy id in [1]
         var id = url.match(regex);
         if (id) {
@@ -522,7 +525,7 @@ plugins.factory('userPlugins', function() {
      * Vine plugin
      */
     var vinePlugin = new UrlPlugin('Vine', function (url) {
-        var regexp = /^https?:\/\/(www\.)?vine.co\/v\/([a-zA-Z0-9]+)(\/.*)?/i,
+        var regexp = /^https?:\/\/(www\.)?vine\.co\/v\/([a-zA-Z0-9]+)(\/.*)?/i,
             match = url.match(regexp);
         if (match) {
             var id = match[2], embedurl = "https://vine.co/v/" + id + "/embed/simple?audio=1";
