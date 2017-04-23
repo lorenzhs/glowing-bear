@@ -13,7 +13,7 @@
     ],
     "launch": {
       "container": "panel",
-      "web_url": "http://www.glowing-bear.org/"
+      "web_url": "https://www.glowing-bear.org/"
     }
   },
   "permissions": [
