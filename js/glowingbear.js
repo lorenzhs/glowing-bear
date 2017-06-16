@@ -203,8 +203,8 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
                         console.log('activeBufferChanged fetchMoreLines callback calling sWB()');
                         $rootScope.scrollWithBuffer();
                         bl.onscroll = _.debounce(function() {
-                            console.log('onscroll handler calling uBB(',$rootScope.bufferBottom,')');
-                            $rootScope.updateBufferBottom($rootScope.bufferBottom);
+                            console.log('onscroll handler calling uBB()');
+                            $rootScope.updateBufferBottom();
                         }, 80);
                         setTimeout(scrollHeightObserver, 500);
                     });
@@ -217,10 +217,16 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
             $scope.unread = notifications.unreadCount('unread');
         });
 
-        window.requestAnimationFrame(function() {
+        var scroll_to_bottom = function() {
             console.log('activeBufferChanged rAF calling uBB(true)');
             $rootScope.updateBufferBottom(true);
-        });
+            // keep retrying every 30ms
+            if (!$rootScope.bufferBottom) {
+                console.log('FAILED TO SCROLL TO BOTTOM -> retrying in 30ms');
+                $timeout(scroll_to_bottom, 30);
+            }
+        };
+        window.requestAnimationFrame(scroll_to_bottom);
 
         // Clear search term on buffer change
         $scope.search = '';
