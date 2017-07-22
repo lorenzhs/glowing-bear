@@ -461,6 +461,16 @@ div.colourbox {
     margin-bottom: -2px;
 }
 
+div.embed .gist {
+    max-width: 800px;
+    overflow: auto;
+}
+
+div.embed .gist .blob-wrapper.data {
+    max-height: 400px;
+    overflow: auto;
+}
+
 
 #sidebar .showquickkeys .buffer .buffer-quick-key {
     transition: all ease-in-out 0.5s;
