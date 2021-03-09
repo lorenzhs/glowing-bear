@@ -28,7 +28,7 @@
   },
   "scripts": {
     "build": "webpack",
-    "lint": "jshint src/js/*.js test/unit/*.js",
+    "lint": "jshint *.js src/js/*.js test/unit/*.js",
     "prestart": "npm install",
     "start": "webpack serve",
     "-pretest": "npm install",
@@ -47,6 +47,7 @@
     "angular-route": "^1.8.2",
     "angular-sanitize": "^1.8.2",
     "angular-touch": "^1.8.2",
+    "esbuild": "^0.9.0",
     "favico.js": "^0.3.10",
     "jquery-linkify": "^2.2.1",
     "underscore": "^1.10.2",
