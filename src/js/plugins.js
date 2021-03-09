@@ -113,7 +113,7 @@ var UrlPlugin = function(name, urlCallback) {
                 var pluginContent = plugins[i].contentForMessage(
                     message.text
                 );
-                if (pluginContent && pluginContent !== []) {
+                if (pluginContent && pluginContent != []) {
 
                     if (pluginContent instanceof Array) {
                         for (var j = pluginContent.length - 1; j >= 0; j--) {
@@ -567,7 +567,7 @@ plugins.factory('userPlugins', function() {
 
             return function() {
                 var element = this.getElement();
-                
+
                 fetch("https://www.tiktok.com/oembed?url=" + url)
                 .then(function(response) {
                     return response.json();

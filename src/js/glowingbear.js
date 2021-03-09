@@ -1,6 +1,6 @@
 'use strict';
 
-import * as Favico from "favico.js";
+import Favico from "favico.js";
 import * as _ from "underscore";
 
 import { connectionFactory } from './connection';
@@ -76,7 +76,7 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
     //For upgrade reasons because we changed the name of host to hostField
     //check if the value might still be in the host key instead of the hostField key
     if (!settings.hostField && settings.host) {
-        settings.hostField = settings.host; 
+        settings.hostField = settings.host;
     }
 
     $rootScope.countWatchers = function () {
@@ -743,7 +743,7 @@ weechat.controller('WeechatCtrl', ['$rootScope', '$scope', '$store', '$timeout',
         bufferResume.reset();
         connection.disconnect();
     };
-    
+
     $scope.reconnect = function() {
         var bufferId = models.getActiveBuffer().id;
         connection.attemptReconnect(bufferId, 3000);
