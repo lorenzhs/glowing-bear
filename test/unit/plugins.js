@@ -1,10 +1,9 @@
 /* plugins go here */
 
-import angular from "angular";
-
-import "angular-mocks";
+"use strict";
 
 import "../../src/main";
+import "angular-mocks";
 
 var msg = function(msg) {
     return {'text': msg };
